@@ -765,7 +765,7 @@
         // 🔥 여기에 Firebase 설정 정보를 입력하세요
         // ========================================
         const firebaseConfig = {
-            apiKey: "AIzaSyDXKeMxd2TJ6x-GX-RVVuibCcjkhl_WTAM",
+           apiKey: "AIzaSyDXKeMxd2TJ6x-GX-RVVuibCcjkhl_WTAM",
             authDomain: "rndur-ddaed.firebaseapp.com",
             projectId: "rndur-ddaed",
             storageBucket: "rndur-ddaed.firebasestorage.app",
@@ -792,7 +792,7 @@
                 return true;
             } catch (error) {
                 console.error('Firebase 초기화 실패:', error);
-                alert('Firebase 설정이 올바르지 않습니다. 코드에서 firebaseConfig를 확인해주세요.');
+                alert('Firebase 설정이 올바르지 않습니다.\n\n1. firebaseConfig 정보를 확인하세요\n2. Firestore Database가 생성되었는지 확인하세요\n3. Firestore 보안 규칙을 테스트 모드로 설정하세요');
                 return false;
             }
         }
@@ -1046,7 +1046,23 @@
                 closeModal();
             } catch (error) {
                 console.error('저장 실패:', error);
-                alert('저장 중 오류가 발생했습니다.');
+                
+                let errorMessage = '저장 중 오류가 발생했습니다.\n\n';
+                
+                if (error.code === 'unavailable') {
+                    errorMessage += '네트워크 연결을 확인하세요.\n';
+                    errorMessage += '또는 Firestore 보안 규칙을 확인하세요.\n\n';
+                    errorMessage += 'Firebase Console > Firestore Database > 규칙에서\n';
+                    errorMessage += 'allow read, write: if true; 로 설정하세요.';
+                } else if (error.code === 'permission-denied') {
+                    errorMessage += 'Firestore 보안 규칙을 확인하세요.\n\n';
+                    errorMessage += 'Firebase Console > Firestore Database > 규칙에서\n';
+                    errorMessage += 'allow read, write: if true; 로 설정하세요.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                alert(errorMessage);
             }
         }
 
@@ -1069,7 +1085,18 @@
                 await setDoc(monthRef, data);
             } catch (error) {
                 console.error('삭제 실패:', error);
-                alert('삭제 중 오류가 발생했습니다.');
+                
+                let errorMessage = '삭제 중 오류가 발생했습니다.\n\n';
+                
+                if (error.code === 'unavailable' || error.code === 'permission-denied') {
+                    errorMessage += 'Firestore 보안 규칙을 확인하세요.\n\n';
+                    errorMessage += 'Firebase Console > Firestore Database > 규칙에서\n';
+                    errorMessage += 'allow read, write: if true; 로 설정하세요.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                alert(errorMessage);
             }
         }
 
