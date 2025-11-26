@@ -243,6 +243,89 @@
             font-size: 14px;
         }
 
+        /* 이미지 미리보기 모달 */
+        .image-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .image-preview-modal.active {
+            display: flex;
+        }
+
+        .image-preview-content {
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 10px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .preview-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .preview-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .preview-btn.save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .preview-btn.save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .preview-btn.close {
+            background: #6c757d;
+            color: white;
+        }
+
+        .preview-btn.close:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .preview-image {
+                max-height: 60vh;
+            }
+
+            .preview-btn {
+                padding: 15px 25px;
+                font-size: 18px;
+            }
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -746,6 +829,17 @@
         </div>
     </div>
 
+    <!-- 이미지 미리보기 모달 -->
+    <div class="image-preview-modal" id="imagePreviewModal">
+        <div class="image-preview-content">
+            <img id="previewImage" class="preview-image" alt="보고서 미리보기">
+            <div class="preview-buttons">
+                <button class="preview-btn save" onclick="downloadImage()">💾 저장하기</button>
+                <button class="preview-btn close" onclick="closePreview()">✕ 닫기</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { 
@@ -765,7 +859,7 @@
         // 🔥 여기에 Firebase 설정 정보를 입력하세요
         // ========================================
         const firebaseConfig = {
-           apiKey: "AIzaSyDXKeMxd2TJ6x-GX-RVVuibCcjkhl_WTAM",
+            apiKey: "AIzaSyDXKeMxd2TJ6x-GX-RVVuibCcjkhl_WTAM",
             authDomain: "rndur-ddaed.firebaseapp.com",
             projectId: "rndur-ddaed",
             storageBucket: "rndur-ddaed.firebasestorage.app",
@@ -792,7 +886,7 @@
                 return true;
             } catch (error) {
                 console.error('Firebase 초기화 실패:', error);
-                alert('Firebase 설정이 올바르지 않습니다.\n\n1. firebaseConfig 정보를 확인하세요\n2. Firestore Database가 생성되었는지 확인하세요\n3. Firestore 보안 규칙을 테스트 모드로 설정하세요');
+                alert('Firebase 설정이 올바르지 않습니다. 코드에서 firebaseConfig를 확인해주세요.');
                 return false;
             }
         }
@@ -1046,23 +1140,7 @@
                 closeModal();
             } catch (error) {
                 console.error('저장 실패:', error);
-                
-                let errorMessage = '저장 중 오류가 발생했습니다.\n\n';
-                
-                if (error.code === 'unavailable') {
-                    errorMessage += '네트워크 연결을 확인하세요.\n';
-                    errorMessage += '또는 Firestore 보안 규칙을 확인하세요.\n\n';
-                    errorMessage += 'Firebase Console > Firestore Database > 규칙에서\n';
-                    errorMessage += 'allow read, write: if true; 로 설정하세요.';
-                } else if (error.code === 'permission-denied') {
-                    errorMessage += 'Firestore 보안 규칙을 확인하세요.\n\n';
-                    errorMessage += 'Firebase Console > Firestore Database > 규칙에서\n';
-                    errorMessage += 'allow read, write: if true; 로 설정하세요.';
-                } else {
-                    errorMessage += error.message;
-                }
-                
-                alert(errorMessage);
+                alert('저장 중 오류가 발생했습니다.');
             }
         }
 
@@ -1085,18 +1163,7 @@
                 await setDoc(monthRef, data);
             } catch (error) {
                 console.error('삭제 실패:', error);
-                
-                let errorMessage = '삭제 중 오류가 발생했습니다.\n\n';
-                
-                if (error.code === 'unavailable' || error.code === 'permission-denied') {
-                    errorMessage += 'Firestore 보안 규칙을 확인하세요.\n\n';
-                    errorMessage += 'Firebase Console > Firestore Database > 규칙에서\n';
-                    errorMessage += 'allow read, write: if true; 로 설정하세요.';
-                } else {
-                    errorMessage += error.message;
-                }
-                
-                alert(errorMessage);
+                alert('삭제 중 오류가 발생했습니다.');
             }
         }
 
@@ -1202,7 +1269,9 @@
             document.getElementById('reportModal').classList.remove('active');
         }
 
-        // 이미지로 저장
+        // 이미지로 저장 (미리보기 표시)
+        let currentImageData = null;
+        
         window.saveAsImage = async function() {
             try {
                 // html2canvas 동적 로드
@@ -1229,18 +1298,85 @@
                     useCORS: true
                 });
                 
-                const image = canvas.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = `구역회계보고서_${currentYear}년${currentMonth}월.png`;
-                link.href = image;
-                link.click();
+                currentImageData = canvas.toDataURL('image/png');
+                
+                // 미리보기 모달에 이미지 표시
+                document.getElementById('previewImage').src = currentImageData;
+                document.getElementById('imagePreviewModal').classList.add('active');
                 
                 buttons.style.display = 'flex';
             } catch (error) {
-                alert('이미지 저장 중 오류가 발생했습니다.');
+                alert('이미지 생성 중 오류가 발생했습니다.');
                 console.error(error);
                 buttons.style.display = 'flex';
             }
+        }
+
+        // 이미지 다운로드
+        window.downloadImage = function() {
+            if (!currentImageData) {
+                alert('이미지 데이터가 없습니다.');
+                return;
+            }
+
+            try {
+                // 모바일 감지
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                
+                if (isMobile && navigator.share && navigator.canShare) {
+                    // 모바일에서 Web Share API 지원 시
+                    fetch(currentImageData)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const file = new File([blob], `구역회계보고서_${currentYear}년${currentMonth}월.png`, { type: 'image/png' });
+                            if (navigator.canShare({ files: [file] })) {
+                                navigator.share({
+                                    files: [file],
+                                    title: '구역 회계 보고서',
+                                    text: `${currentYear}년 ${currentMonth}월 구역 회계 보고서`
+                                }).catch(err => {
+                                    // 공유 취소 시 일반 다운로드
+                                    if (err.name !== 'AbortError') {
+                                        downloadDirectly();
+                                    }
+                                });
+                            } else {
+                                downloadDirectly();
+                            }
+                        })
+                        .catch(() => downloadDirectly());
+                } else {
+                    // 데스크톱이거나 Web Share API 미지원 시
+                    downloadDirectly();
+                }
+            } catch (error) {
+                console.error('다운로드 오류:', error);
+                downloadDirectly();
+            }
+        }
+
+        // 직접 다운로드
+        function downloadDirectly() {
+            const link = document.createElement('a');
+            link.download = `구역회계보고서_${currentYear}년${currentMonth}월.png`;
+            link.href = currentImageData;
+            link.click();
+            
+            // 모바일에서는 다운로드 후 안내 메시지
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                setTimeout(() => {
+                    alert('이미지가 다운로드되었습니다.\n다운로드 폴더 또는 갤러리에서 확인하세요.');
+                }, 500);
+            }
+            
+            closePreview();
+        }
+
+        // 미리보기 닫기
+        window.closePreview = function() {
+            document.getElementById('imagePreviewModal').classList.remove('active');
+            currentImageData = null;
         }
 
         // 모달 외부 클릭시 닫기
@@ -1253,6 +1389,12 @@
         document.getElementById('reportModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeReport();
+            }
+        });
+
+        document.getElementById('imagePreviewModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePreview();
             }
         });
 
